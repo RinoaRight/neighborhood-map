@@ -15,59 +15,74 @@ var Location = function (data) {
 };
 
 var ViewModel = function () {
-    var self = this;
-    var infowindow = new google.maps.InfoWindow();
-    var marker, i, place;
+    var self = this,
+        infowindow = new google.maps.InfoWindow(),
+        markers = [];
+    // TODO: check if 'place' is still needed
+    var marker, i, place, createInitialMap;
 
     this.locationList = ko.observableArray([]);
 
     initialLocations.forEach(function (location) {
         self.locationList.push(new Location(location));
     });
+    // TODO: check if this is still needed
+    this.fullLocationList = this.locationList.slice();
 
-    this.fullLocationList = this.locationList().slice();
-
-    this.centerLocation = ko.observable(this.locationList()[0]);
-
+    // Determines the location that was selected last
     this.currentLocation = ko.observable();
 
-    this.createMap = new google.maps.Map(document.getElementById('map'), {
+    // Creates map centered at the specified location
+    createInitialMap = new google.maps.Map(document.getElementById('map'), {
         zoom: 15,
-        center: new google.maps.LatLng(this.centerLocation().latitude(), this.centerLocation().longitude()),
+        center: new google.maps.LatLng(this.locationList()[0].latitude(), this.locationList()[0].longitude()),
         mapTypeId: google.maps.MapTypeId.ROADMAP
     });
 
-    this.addMarkers = function () {
-        for (i = 0; i < self.locationList().length; i += 1) {
+    this.addMarkers = function (map, locList) {
+        for (i = 0; i < locList.length; i += 1) {
             marker = new google.maps.Marker({
-                position: new google.maps.LatLng(self.locationList()[i].latitude(), self.locationList()[i].longitude()),
-                map: self.createMap
+                position: new google.maps.LatLng(locList[i].latitude(), locList[i].longitude()),
+                map: map
             });
             google.maps.event.addListener(marker, 'click', (function (marker, i) {
                 return function () {
-                    infowindow.setContent(self.locationList()[i].name());
-                    infowindow.open(self.createMap, marker);
+                    infowindow.setContent(locList[i].name());
+                    infowindow.open(map, marker);
                 }
             })(marker, i));
+            markers.push(marker);
         }
     };
 
-    //this.addMarkers();
+    // Sets the map on all markers in the array
+    this.setAllMap = function (map) {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(map);
+        }
+    };
+
+    this.addMarkers(createInitialMap, this.locationList());
 
     this.searchedLocation = function () {
-        var locList = self.locationList().slice(),
-            length = locList.length,
-            valueEntered = self.currentLocation();
+        var filteredList = [],
+            createRecenteredMap;
 
-        var filteredList = locList.filter(function(loc){
-            return loc.name() === valueEntered;
+        filteredList = self.locationList().filter(function (loc) {
+            return loc.name() === self.currentLocation();
         });
 
-        self.locationList = ko.observableArray(filteredList);
+        createRecenteredMap = new google.maps.Map(document.getElementById('map'), {
+            zoom: 15,
+            center: new google.maps.LatLng(filteredList[0].latitude(), filteredList[0].longitude()),
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
 
-        self.addMarkers();
+        //remove all markers
+        self.setAllMap(null);
 
-        self.locationList = ko.observableArray(self.fullLocationList);
+        // add marker(s) of the found location(s)
+        self.addMarkers(createRecenteredMap, filteredList);
 
     };
 
@@ -75,7 +90,7 @@ var ViewModel = function () {
         // Create the search box and link it to the UI element.
         var input = document.getElementById('pac-input');
         //var searchBox = new google.maps.places.SearchBox(input);
-        //self.createMap.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+        //createInitialMap.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
         //// Listen for the event fired when the user selects an item from the
         //// pick list. Retrieve the matching places for that item.
@@ -103,7 +118,7 @@ var ViewModel = function () {
         //
         //        // Create a marker for each place.
         //        var marker = new google.maps.Marker({
-        //            map: self.createMap,
+        //            map: createInitialMap,
         //            icon: image,
         //            title: place.name,
         //            position: place.geometry.location
@@ -114,7 +129,7 @@ var ViewModel = function () {
         //        bounds.extend(place.geometry.location);
         //    }
         //
-        //    self.createMap.fitBounds(bounds);
+        //    createInitialMap.fitBounds(bounds);
         //});
         //
         //
