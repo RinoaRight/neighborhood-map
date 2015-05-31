@@ -5,13 +5,19 @@
 
 #map {
   position: absolute;
+  width: 1000px;
+  height: 800px;
   top: 10px;
   left: 10px;
 }
 
+#location-list {
+  float: right;
+  margin-right: 400px;
+}
 
 #search-box {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 20px;
+  left: 20px;
 }

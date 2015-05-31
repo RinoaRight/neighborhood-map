@@ -3,12 +3,13 @@
   <head lang="en">
     <meta charset="UTF-8">
     <title>Neighborhood Map</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places"></script>
 
   </head>
   <body>
     <div id="map-container">
-      <div id="map" style="width: 1000px; height: 800px;"></div>
+      <div id="map"></div>
       <div id="search-box">
         <form data-bind="submit: searchedLocation">
           <input id="pac-input" class="controls" type="text" value="" placeholder="Search Box"
