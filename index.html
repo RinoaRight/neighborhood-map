@@ -7,13 +7,17 @@
 
   </head>
   <body>
-    <div id="map" style="width: 1000px; height: 800px;"></div>
-    <form data-bind="submit: searchedLocation">
-      <input id="pac-input" class="controls" type="text" value="" placeholder="Search Box"
-             data-bind="value: currentLocation">
-    </form>
+    <div id="map-container">
+      <div id="map" style="width: 1000px; height: 800px;"></div>
+      <div id="search-box">
+        <form data-bind="submit: searchedLocation">
+          <input id="pac-input" class="controls" type="text" value="" placeholder="Search Box"
+                 data-bind="value: currentLocationName">
+        </form>
+      </div>
+    </div>
     <ul id="location-list" data-bind="foreach: locationList">
-      <li data-bind="text: name"></li>
+      <li data-bind="text: name, click: $parent.searchedLocation"></li>
     </ul>
 
     <script src="js/lib/rrLib.js"></script>

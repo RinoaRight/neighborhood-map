@@ -1,1 +1,17 @@
 
+#map-container {
+  position: relative;
+}
+
+#map {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+
+#search-box {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}

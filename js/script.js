@@ -14,26 +14,25 @@ var Location = function (data) {
     this.longitude = ko.observable(data[2]);
 };
 
+// TODO: make new map only in cases when the marker is farther than n pxls from the previous;
+// TODO: make search based on parts of words (maybe autocomplete as well), and make it register insensitive
+// TODO: correct input of empty field or out-of-search-range object
 var ViewModel = function () {
     var self = this,
-        infowindow = new google.maps.InfoWindow(),
-        markers = [];
-    // TODO: check if 'place' is still needed
-    var marker, i, place, createInitialMap;
+        infowindow = new google.maps.InfoWindow();
+    var marker, i, initialMap;
 
     this.locationList = ko.observableArray([]);
 
     initialLocations.forEach(function (location) {
         self.locationList.push(new Location(location));
     });
-    // TODO: check if this is still needed
-    this.fullLocationList = this.locationList.slice();
 
     // Determines the location that was selected last
-    this.currentLocation = ko.observable();
+    this.currentLocationName = ko.observable();
 
     // Creates map centered at the specified location
-    createInitialMap = new google.maps.Map(document.getElementById('map'), {
+    initialMap = new google.maps.Map(document.getElementById('map'), {
         zoom: 15,
         center: new google.maps.LatLng(this.locationList()[0].latitude(), this.locationList()[0].longitude()),
         mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -51,96 +50,50 @@ var ViewModel = function () {
                     infowindow.open(map, marker);
                 }
             })(marker, i));
-            markers.push(marker);
         }
     };
 
-    // Sets the map on all markers in the array
-    this.setAllMap = function (map) {
-        for (var i = 0; i < markers.length; i++) {
-            markers[i].setMap(map);
-        }
+    this.createMap = function (map, locList) {
+        self.addMarkers(map, locList);
     };
 
-    this.addMarkers(createInitialMap, this.locationList());
+    //this.createSearchBox = function (map) {
+    //    // Create the search box and link it to the UI element.
+    //    var input = document.getElementById('pac-input');
+    //    map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+    //};
 
-    this.searchedLocation = function () {
+
+    this.searchedLocation = function (searchedLoc) {
         var filteredList = [],
-            createRecenteredMap;
+            recenteredMap;
 
-        filteredList = self.locationList().filter(function (loc) {
-            return loc.name() === self.currentLocation();
-        });
+        if (!(searchedLoc instanceof Location)) {
+            filteredList = self.locationList().filter(function (loc) {
+                return loc.name() === self.currentLocationName();
+            });
+        } else {
+            filteredList = self.locationList().filter(function (loc) {
+                return loc.name() === searchedLoc.name();
+            });
+        }
 
-        createRecenteredMap = new google.maps.Map(document.getElementById('map'), {
+        recenteredMap = new google.maps.Map(document.getElementById('map'), {
             zoom: 15,
             center: new google.maps.LatLng(filteredList[0].latitude(), filteredList[0].longitude()),
             mapTypeId: google.maps.MapTypeId.ROADMAP
         });
 
         //remove all markers
-        self.setAllMap(null);
+        self.createMap(initialMap, []);
 
         // add marker(s) of the found location(s)
-        self.addMarkers(createRecenteredMap, filteredList);
-
+        self.createMap(recenteredMap, filteredList);
     };
 
-    this.createSearchBox = function () {
-        // Create the search box and link it to the UI element.
-        var input = document.getElementById('pac-input');
-        //var searchBox = new google.maps.places.SearchBox(input);
-        //createInitialMap.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+    // Initialization: create the initial map with all markers present
+    this.createMap(initialMap, self.locationList());
 
-        //// Listen for the event fired when the user selects an item from the
-        //// pick list. Retrieve the matching places for that item.
-        //google.maps.event.addListener(searchBox, 'places_changed', function () {
-        //    var places = searchBox.getPlaces();
-        //    var markers = [];
-        //    var bounds = new google.maps.LatLngBounds();
-        //
-        //    if (places.length == 0) {
-        //        return;
-        //    }
-        //    for (i = 0; marker = markers[i]; i++) {
-        //        marker.setMap(null);
-        //    }
-        //
-        //    // For each place, get the icon, place name, and location.
-        //    for (i = 0; place = places[i]; i++) {
-        //        var image = {
-        //            url: place.icon,
-        //            size: new google.maps.Size(71, 71),
-        //            origin: new google.maps.Point(0, 0),
-        //            anchor: new google.maps.Point(17, 34),
-        //            scaledSize: new google.maps.Size(25, 25)
-        //        };
-        //
-        //        // Create a marker for each place.
-        //        var marker = new google.maps.Marker({
-        //            map: createInitialMap,
-        //            icon: image,
-        //            title: place.name,
-        //            position: place.geometry.location
-        //        });
-        //
-        //        markers.push(marker);
-        //
-        //        bounds.extend(place.geometry.location);
-        //    }
-        //
-        //    createInitialMap.fitBounds(bounds);
-        //});
-        //
-        //
-        //google.maps.event.addListener(map, 'bounds_changed', function() {
-        //    var bounds = map.getBounds();
-        //    searchBox.setBounds(bounds);
-        //});
-    };
-
-    google.maps.event.addDomListener(window, 'load', this.createSearchBox());
 };
-
 
 ko.applyBindings(new ViewModel());
