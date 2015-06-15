@@ -19,9 +19,11 @@ var Location = function (data) {
 // TODO: correct input of empty field or out-of-search-range object
 var ViewModel = function () {
     var TILE_SIZE = 256;
+    var pixelMaxDiff = 0.10;
     var self = this,
         infowindow = new google.maps.InfoWindow();
-    var marker, i, initialMap;
+    var marker, i, currentMap, currentLocation, previousLocation;
+    var markers = [];
 
     this.locationList = ko.observableArray([]);
 
@@ -32,8 +34,10 @@ var ViewModel = function () {
     // Determines the location that was selected last
     this.currentLocationName = ko.observable();
 
-    // Creates map centered at the specified location
-    initialMap = new google.maps.Map(document.getElementById('map'), {
+    currentLocation = this.locationList()[0];
+
+    // Creates map centered at the initially specified location
+    currentMap = new google.maps.Map(document.getElementById('map'), {
         zoom: 15,
         center: new google.maps.LatLng(this.locationList()[0].latitude(), this.locationList()[0].longitude()),
         mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -51,17 +55,17 @@ var ViewModel = function () {
                     infowindow.open(map, marker);
                 }
             })(marker, i));
+            markers.push(marker);
         }
     };
 
-    this.createMap = function (map, locList) {
-        self.addMarkers(map, locList);
-    };
-
-
     function bound(value, opt_min, opt_max) {
-        if (opt_min != null) value = Math.max(value, opt_min);
-        if (opt_max != null) value = Math.min(value, opt_max);
+        if (opt_min != null) {
+            value = Math.max(value, opt_min);
+        }
+        if (opt_max != null) {
+            value = Math.min(value, opt_max);
+        }
         return value;
     }
 
@@ -81,8 +85,8 @@ var ViewModel = function () {
         this.pixelsPerLonRadian_ = TILE_SIZE / (2 * Math.PI);
     }
 
-    MercatorProjection.prototype.fromLatLngToPoint = function(latLng,
-                                                              opt_point) {
+    MercatorProjection.prototype.fromLatLngToPoint = function (latLng,
+                                                               opt_point) {
         var me = this;
         var point = opt_point || new google.maps.Point(0, 0);
         var origin = me.pixelOrigin_;
@@ -93,48 +97,71 @@ var ViewModel = function () {
         // about a third of a tile past the edge of the world tile.
         var siny = bound(Math.sin(degreesToRadians(latLng.lat())), -0.9999,
                          0.9999);
-        point.y = origin.y + 0.5 * Math.log((1 + siny) / (1 - siny)) *
-                             -me.pixelsPerLonRadian_;
+        point.y = origin.y + 0.5 * Math.log((1 + siny) / (1 - siny)) * -me.pixelsPerLonRadian_;
         return point;
     };
 
 
-
     this.searchedLocation = function (searchedLoc) {
         var filteredList = [],
-            recenteredMap;
+            projection = new MercatorProjection(),
+            currentLocationLatLng,
+            previousLocationLatLng,
+            currentLocPxlCoord,
+            previousLocPxlCoord;
 
 
-        var projection = new MercatorProjection();
-        var testCoord = new google.maps.LatLng (filteredList[0].latitude(), filteredList[0].longitude());
-        console.log(projection.fromLatLngToPoint(testCoord));
+        // Sets the map on all markers in the array.
+        var setAllMap = function (map) {
+            for (var i = 0; i < markers.length; i++) {
+                markers[i].setMap(map);
+            }
+        };
 
+        // Removes the markers from the map, but keeps them in the array.
+        var clearMarkers = function () {
+            setAllMap(null);
+        };
+
+        // checks the input from the searchbox; then checks the input from the clicked element of the list of locations;
+        // in the latter case also changes this.currentLocationName(), previousLocation and currentLocation
         if (!(searchedLoc instanceof Location)) {
             filteredList = self.locationList().filter(function (loc) {
                 return loc.name() === self.currentLocationName();
             });
         } else {
             filteredList = self.locationList().filter(function (loc) {
+                self.currentLocationName(searchedLoc.name());
                 return loc.name() === searchedLoc.name();
             });
         }
 
-        recenteredMap = new google.maps.Map(document.getElementById('map'), {
-            zoom: 15,
-            center: new google.maps.LatLng(filteredList[0].latitude(), filteredList[0].longitude()),
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-        });
+        previousLocation = currentLocation;
+        currentLocation = filteredList[0];
+        currentLocationLatLng = new google.maps.LatLng(currentLocation.latitude(), currentLocation.longitude());
+        previousLocationLatLng = new google.maps.LatLng(previousLocation.latitude(), previousLocation.longitude());
+        previousLocPxlCoord = projection.fromLatLngToPoint(currentLocationLatLng);
+        currentLocPxlCoord = projection.fromLatLngToPoint(previousLocationLatLng);
 
-        //remove all markers
-        self.createMap(initialMap, []);
+        clearMarkers();
 
-        // add marker(s) of the found location(s)
-        self.createMap(recenteredMap, filteredList);
+        // add marker(s) of the found location(s) and recenter map if the distance between the found location and
+        // previous map center is big enough
+        if (Math.abs(previousLocPxlCoord.x - currentLocPxlCoord.x) > pixelMaxDiff) {
+            currentMap.setCenter(currentLocationLatLng);
+            self.addMarkers(currentMap, filteredList);
+
+        } else if (Math.abs(previousLocPxlCoord.y - currentLocPxlCoord.y) > pixelMaxDiff) {
+            currentMap.setCenter(currentLocationLatLng);
+            self.addMarkers(currentMap, filteredList);
+        } else {
+            self.addMarkers(currentMap, filteredList);
+        }
 
     };
 
     // Initialization: create the initial map with all markers present
-    this.createMap(initialMap, self.locationList());
+    this.addMarkers(currentMap, self.locationList());
 
 };
 
