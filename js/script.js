@@ -14,12 +14,11 @@ var Location = function (data) {
     this.longitude = ko.observable(data[2]);
 };
 
-// TODO: make new map only in cases when the marker is farther than n pxls from the previous;
 // TODO: make search based on parts of words (maybe autocomplete as well), and make it register insensitive
 // TODO: correct input of empty field or out-of-search-range object
 var ViewModel = function () {
     var TILE_SIZE = 256;
-    var pixelMaxDiff = 0.10;
+    var pixelMaxDiff = 300;
     var self = this,
         infowindow = new google.maps.InfoWindow();
     var marker, i, currentMap, currentLocation, previousLocation;
@@ -105,10 +104,17 @@ var ViewModel = function () {
     this.searchedLocation = function (searchedLoc) {
         var filteredList = [],
             projection = new MercatorProjection(),
+            numTiles = 1 << currentMap.getZoom(),
             currentLocationLatLng,
             previousLocationLatLng,
             currentLocPxlCoord,
-            previousLocPxlCoord;
+            previousLocPxlCoord,
+            cathetus1,
+            cathetus2,
+            distance,
+            square = function(a) {
+                return a * a
+            };
 
 
         // Sets the map on all markers in the array.
@@ -142,19 +148,20 @@ var ViewModel = function () {
         previousLocationLatLng = new google.maps.LatLng(previousLocation.latitude(), previousLocation.longitude());
         previousLocPxlCoord = projection.fromLatLngToPoint(currentLocationLatLng);
         currentLocPxlCoord = projection.fromLatLngToPoint(previousLocationLatLng);
+        cathetus1 = Math.abs(previousLocPxlCoord.x - currentLocPxlCoord.x) * numTiles;
+        cathetus2 = Math.abs(previousLocPxlCoord.y - currentLocPxlCoord.y) * numTiles;
+        distance = Math.sqrt(square (cathetus1) + square (cathetus2));
 
         clearMarkers();
 
         // add marker(s) of the found location(s) and recenter map if the distance between the found location and
         // previous map center is big enough
-        if (Math.abs(previousLocPxlCoord.x - currentLocPxlCoord.x) > pixelMaxDiff) {
+        if (distance > pixelMaxDiff) {
+            console.log('aaa');
             currentMap.setCenter(currentLocationLatLng);
             self.addMarkers(currentMap, filteredList);
 
-        } else if (Math.abs(previousLocPxlCoord.y - currentLocPxlCoord.y) > pixelMaxDiff) {
-            currentMap.setCenter(currentLocationLatLng);
-            self.addMarkers(currentMap, filteredList);
-        } else {
+        }  else {
             self.addMarkers(currentMap, filteredList);
         }
 
