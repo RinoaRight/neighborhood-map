@@ -23,11 +23,16 @@ var ViewModel = function () {
         infowindow = new google.maps.InfoWindow();
     var marker, i, currentMap, currentLocation, previousLocation;
     var markers = [];
+    this.locationNames = [];
 
     this.locationList = ko.observableArray([]);
 
     initialLocations.forEach(function (location) {
         self.locationList.push(new Location(location));
+    });
+
+    this.locationList().forEach(function (location) {
+        self.locationNames.push(location.name());
     });
 
     // Determines the location that was selected last
@@ -111,10 +116,11 @@ var ViewModel = function () {
             previousLocPxlCoord,
             cathetus1,
             cathetus2,
-            distance,
-            square = function(a) {
-                return a * a
-            };
+            distance;
+
+        var square = function (a) {
+            return a * a
+        };
 
 
         // Sets the map on all markers in the array.
@@ -130,17 +136,19 @@ var ViewModel = function () {
         };
 
         // checks the input from the searchbox; then checks the input from the clicked element of the list of locations;
-        // in the latter case also changes this.currentLocationName(), previousLocation and currentLocation
+        // in the latter case also changes this.currentLocationName()
         if (!(searchedLoc instanceof Location)) {
             filteredList = self.locationList().filter(function (loc) {
                 return loc.name() === self.currentLocationName();
             });
         } else {
+            self.currentLocationName(searchedLoc.name());
             filteredList = self.locationList().filter(function (loc) {
-                self.currentLocationName(searchedLoc.name());
                 return loc.name() === searchedLoc.name();
             });
         }
+
+        console.log(self.currentLocationName());
 
         previousLocation = currentLocation;
         currentLocation = filteredList[0];
@@ -150,18 +158,17 @@ var ViewModel = function () {
         currentLocPxlCoord = projection.fromLatLngToPoint(previousLocationLatLng);
         cathetus1 = Math.abs(previousLocPxlCoord.x - currentLocPxlCoord.x) * numTiles;
         cathetus2 = Math.abs(previousLocPxlCoord.y - currentLocPxlCoord.y) * numTiles;
-        distance = Math.sqrt(square (cathetus1) + square (cathetus2));
+        distance = Math.sqrt(square(cathetus1) + square(cathetus2));
 
         clearMarkers();
 
         // add marker(s) of the found location(s) and recenter map if the distance between the found location and
         // previous map center is big enough
         if (distance > pixelMaxDiff) {
-            console.log('aaa');
             currentMap.setCenter(currentLocationLatLng);
             self.addMarkers(currentMap, filteredList);
 
-        }  else {
+        } else {
             self.addMarkers(currentMap, filteredList);
         }
 
@@ -173,3 +180,4 @@ var ViewModel = function () {
 };
 
 ko.applyBindings(new ViewModel());
+

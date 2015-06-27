@@ -3,6 +3,7 @@
   <head lang="en">
     <meta charset="UTF-8">
     <title>Neighborhood Map</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
     <link href="style.css" rel="stylesheet" type="text/css">
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places"></script>
 
@@ -13,7 +14,7 @@
       <div id="search-box">
         <form data-bind="submit: searchedLocation">
           <input id="pac-input" class="controls" type="text" value="" placeholder="Search Box"
-                 data-bind="value: currentLocationName">
+                 data-bind="jqAuto: {value: currentLocationName, source: locationNames}">
         </form>
       </div>
     </div>
@@ -23,6 +24,11 @@
 
     <script src="js/lib/rrLib.js"></script>
     <script src="js/lib/knockout-3.2.0.js"></script>
+    <script src="js/lib/jquery.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    <script
+        src="https://cdn.rawgit.com/rniemeyer/knockout-jqAutocomplete/master/build/knockout-jqAutocomplete.js">
+    </script>
     <script src="js/script.js"></script>
 
   </body>
