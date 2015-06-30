@@ -14,7 +14,6 @@ var Location = function (data) {
     this.longitude = ko.observable(data[2]);
 };
 
-// TODO: make search based on parts of words (maybe autocomplete as well), and make it register insensitive
 // TODO: correct input of empty field or out-of-search-range object
 var ViewModel = function () {
     var TILE_SIZE = 256;
@@ -40,7 +39,7 @@ var ViewModel = function () {
 
     currentLocation = this.locationList()[0];
 
-    // Creates map centered at the initially specified location
+    // Create map centered at the initially specified location
     currentMap = new google.maps.Map(document.getElementById('map'), {
         zoom: 15,
         center: new google.maps.LatLng(this.locationList()[0].latitude(), this.locationList()[0].longitude()),
@@ -76,10 +75,6 @@ var ViewModel = function () {
     function degreesToRadians(deg) {
         return deg * (Math.PI / 180);
     }
-
-    //function radiansToDegrees(rad) {
-    //    return rad / (Math.PI / 180);
-    //}
 
     /** @constructor */
     function MercatorProjection() {
@@ -123,20 +118,20 @@ var ViewModel = function () {
         };
 
 
-        // Sets the map on all markers in the array.
+        // Set the map on all markers in the array.
         var setAllMap = function (map) {
             for (var i = 0; i < markers.length; i++) {
                 markers[i].setMap(map);
             }
         };
 
-        // Removes the markers from the map, but keeps them in the array.
+        // Remove the markers from the map, but keeps them in the array.
         var clearMarkers = function () {
             setAllMap(null);
         };
 
-        // checks the input from the searchbox; then checks the input from the clicked element of the list of locations;
-        // in the latter case also changes this.currentLocationName()
+        // check the input from the searchbox; then check the input from the clicked element of the list of locations;
+        // in the latter case also change this.currentLocationName()
         if (!(searchedLoc instanceof Location)) {
             filteredList = self.locationList().filter(function (loc) {
                 return loc.name() === self.currentLocationName();
@@ -148,7 +143,10 @@ var ViewModel = function () {
             });
         }
 
-        console.log(self.currentLocationName());
+        // Check the input for validity (discard empty or those not in the list of available locations)
+        if (filteredList.length === 0) {
+            return;
+        }
 
         previousLocation = currentLocation;
         currentLocation = filteredList[0];
