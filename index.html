@@ -18,9 +18,12 @@
         </form>
       </div>
     </div>
-    <ul id="location-list" data-bind="foreach: locationList">
-      <li data-bind="text: name, click: $parent.searchedLocation"></li>
-    </ul>
+    <div id="location-list">
+      <h2 class="location-header">Places to visit in Ostankino:</h2>
+      <ul data-bind="foreach: locationList">
+        <li data-bind="text: name, click: $parent.searchedLocation"></li>
+      </ul>
+    </div>
 
     <script src="js/lib/rrLib.js"></script>
     <script src="js/lib/knockout-3.2.0.js"></script>
