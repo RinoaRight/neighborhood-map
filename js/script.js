@@ -4,8 +4,9 @@ var initialLocations = [
     ['Teletsentr', 55.821795, 37.608850],
     ['Twin Pigs', 55.820891, 37.607262],
     ['Ostankino Television Tower', 55.819686, 37.611725],
-    ['Ostankinskiy Prud', 55.822705, 37.613979]
-
+    ['Ostankinskiy Prud', 55.822705, 37.613979],
+    ['All-Russian Exhibition Center', 55.831112, 37.629835],
+    ['Krugovaya Kinopanorama', 55.827050, 37.630028]
 ];
 
 var Location = function (data) {
