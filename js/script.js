@@ -6,7 +6,9 @@ var initialLocations = [
     ['Ostankino Television Tower', 55.819686, 37.611725],
     ['Ostankinskiy Prud', 55.822705, 37.613979],
     ['All-Russian Exhibition Center', 55.831112, 37.629835],
-    ['Krugovaya Kinopanorama', 55.827050, 37.630028]
+    ['Krugovaya Kinopanorama', 55.827050, 37.630028],
+    ['Memorial Museum of Cosmonautics', 55.822699, 37.639963],
+    ['Moscow Botanical Garden', 55.838933, 37.603000]
 ];
 
 var Location = function (data) {
@@ -42,7 +44,7 @@ var ViewModel = function () {
 
     // Create map centered at the initially specified location
     currentMap = new google.maps.Map(document.getElementById('map'), {
-        zoom: 15,
+        zoom: 14,
         center: new google.maps.LatLng(this.locationList()[0].latitude(), this.locationList()[0].longitude()),
         mapTypeId: google.maps.MapTypeId.ROADMAP
     });
